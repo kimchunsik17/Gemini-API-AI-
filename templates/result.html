@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>퀴즈 결과</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- html2canvas & jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --bg-color: #343541;
@@ -71,6 +74,7 @@
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
+            padding: 20px; /* Added padding for capture */
         }
 
         /* Chat Style Review Blocks */
@@ -131,34 +135,67 @@
             color: var(--text-primary);
         }
 
-        .btn-retry {
-            background-color: var(--brand-green);
-            color: white;
-            border: none;
-            padding: 12px 30px;
+        .btn-action {
+            background-color: #40414f;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
             border-radius: 4px;
-            font-size: 1.1rem;
-            margin: 40px 0;
-            transition: background-color 0.2s;
+            font-size: 0.9rem;
+            margin: 5px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             text-decoration: none;
-            display: inline-block;
         }
 
-        .btn-retry:hover {
-            background-color: var(--brand-green-hover);
+        .btn-action:hover {
+            background-color: #2a2b32;
             color: white;
+        }
+
+        .btn-primary-action {
+            background-color: var(--brand-green);
+            border-color: var(--brand-green);
+            color: white;
+        }
+        
+        .btn-primary-action:hover {
+            background-color: var(--brand-green-hover);
+        }
+
+        .share-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div class="result-header">
+    <div class="result-header" id="capture-area">
         <div class="topic-badge">주제: {{ quiz_topic }}</div>
         <div class="score-circle">{{ score }}</div>
         <p class="summary-text">총 {{ total_questions }}문제 중 {{ correct_answers_count }}문제를 맞히셨습니다!</p>
-        <a href="{% url 'quiz_app:home' %}" class="btn-retry">
-            새로운 퀴즈 생성하기
-        </a>
+        
+        <div class="share-buttons" data-html2canvas-ignore="true">
+            <a href="{% url 'quiz_app:home' %}" class="btn-action btn-primary-action">
+                새 퀴즈 만들기
+            </a>
+            <button onclick="copyLink()" class="btn-action">
+                🔗 링크 복사
+            </button>
+            <button onclick="saveAsImage()" class="btn-action">
+                📸 이미지 저장 (인스타)
+            </button>
+            <button onclick="saveAsPDF()" class="btn-action">
+                📄 PDF 저장
+            </button>
+        </div>
     </div>
 
     <div class="review-container">
@@ -203,9 +240,83 @@
         {% endfor %}
     </div>
 
-    <div style="height: 50px;"></div> <!-- Spacer -->
+    <div style="height: 50px;"></div>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Sharing Scripts -->
+    <script>
+        // 1. 링크 복사 기능
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("링크가 클립보드에 복사되었습니다! \nSNS에 붙여넣어 공유하세요.");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                prompt("이 링크를 복사하세요:", url); // Fallback
+            });
+        }
+
+        // 2. 이미지 저장 (인스타그램 공유용)
+        function saveAsImage() {
+            const element = document.body; // 전체 화면 캡처
+            
+            // 버튼 숨기기 (캡처 시 안 보이게)
+            const buttons = document.querySelector('.share-buttons');
+            buttons.style.display = 'none';
+
+            html2canvas(element, {
+                backgroundColor: "#343541", // 다크 모드 배경색 유지
+                scale: 2 // 고화질
+            }).then(canvas => {
+                // 버튼 다시 보이기
+                buttons.style.display = 'flex';
+
+                const link = document.createElement('a');
+                link.download = 'my-quiz-result.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        // 3. PDF 저장
+        function saveAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const element = document.body;
+            
+            const buttons = document.querySelector('.share-buttons');
+            buttons.style.display = 'none';
+
+            html2canvas(element, {
+                backgroundColor: "#343541",
+                scale: 2
+            }).then(canvas => {
+                buttons.style.display = 'flex';
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+
+                const doc = new jsPDF('p', 'mm', 'a4');
+                let position = 0;
+
+                // 긴 페이지 처리 (페이징)
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('quiz-result.pdf');
+            });
+        }
+    </script>
 </body>
 </html>
