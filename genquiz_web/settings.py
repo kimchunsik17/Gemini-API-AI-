@@ -33,7 +33,6 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -126,7 +125,6 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
 # Cache configuration for rate limiting
 CACHES = {
     'default': {
@@ -139,3 +137,8 @@ CACHES = {
     }
 }
 
+# CSRF & Security Settings for Cloud Run
+# Trust connections coming from Cloud Run domain
+CSRF_TRUSTED_ORIGINS = ['https://*.run.app']
+# Ensure Django knows it's running behind a proxy (HTTPS)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
