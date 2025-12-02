@@ -32,20 +32,22 @@ def generate_quiz_questions(topic: str) -> list:
     model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = f"""
-    You are a quiz generator. Generate 5 multiple-choice questions about "{topic}".
-    Each question should have a 'question', 'options' (a list of 4 strings), and an 'answer' (the correct option string).
+    You are a quiz generator. Generate 5 multiple-choice questions about "{topic}" in Korean.
+    Each question should have a 'question', 'options' (a list of 4 strings), 'answer' (the correct option string), and an 'explanation' (a brief explanation of the correct answer).
     The response MUST be a pure JSON list format, without any Markdown backticks (```json).
     Example format:
     [
       {{
-        "question": "What is the capital of France?",
-        "options": ["Berlin", "Madrid", "Paris", "Rome"],
-        "answer": "Paris"
+        "question": "대한민국의 수도는 어디입니까?",
+        "options": ["부산", "서울", "인천", "대구"],
+        "answer": "서울",
+        "explanation": "서울은 대한민국의 수도이자 최대 도시입니다."
       }},
       {{
-        "question": "Which planet is known as the Red Planet?",
-        "options": ["Earth", "Mars", "Jupiter", "Venus"],
-        "answer": "Mars"
+        "question": "태양계에서 가장 큰 행성은 무엇입니까?",
+        "options": ["지구", "화성", "목성", "금성"],
+        "answer": "목성",
+        "explanation": "목성은 태양계에서 가장 큰 가스 행성입니다."
       }}
     ]
     """

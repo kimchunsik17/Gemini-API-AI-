@@ -1,51 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Quiz Master</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #343541;
+            --card-bg: #444654;
+            --text-primary: #ececf1;
+            --text-secondary: #c5c5d2;
+            --input-bg: #40414f;
+            --border-color: #565869;
+            --brand-green: #10a37f;
+            --brand-green-hover: #1a7f64;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Söhne', 'ui-sans-serif', 'system-ui', -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
         }
-        .container {
-            max-width: 600px;
-            margin-top: 50px;
-            padding: 30px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #007bff;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-        .form-label {
-            font-weight: 500;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+
+        .main-container {
             width: 100%;
-            padding: 10px;
-            font-size: 1.1em;
+            max-width: 720px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
         }
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
+
+        .logo-area {
+            margin-bottom: 20px;
         }
+
+        .gpt-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--brand-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 15px rgba(16, 163, 127, 0.4);
+        }
+
+        .gpt-icon svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+        }
+
+        .input-area {
+            width: 100%;
+            position: relative;
+        }
+
+        .custom-input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 16px 50px 16px 20px;
+            font-size: 1rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: var(--brand-green);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        .custom-input::placeholder {
+            color: #8e8ea0;
+        }
+
+        .send-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: #202123;
+            color: var(--brand-green);
+        }
+
         .alert {
+            background-color: #444654;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            width: 100%;
             margin-top: 20px;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .chip {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip:hover {
+            background-color: #2a2b32;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container text-center">
-        <h1>AI Quiz Master</h1>
-        <p class="lead mb-4">Enter a topic and let AI generate a quiz for you!</p>
+    <div class="main-container">
+        <div class="logo-area">
+            <div class="gpt-icon">
+                <!-- Simple Bolt Icon simulating AI -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 2L3 14h9v8l10-12h-9z"/></svg>
+            </div>
+            <h1>AI Quiz Master</h1>
+        </div>
 
         {% if error_message %}
             <div class="alert alert-danger" role="alert">
@@ -53,17 +164,26 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% url 'quiz_app:home' %}">
+        <form method="post" action="{% url 'quiz_app:home' %}" class="input-area">
             {% csrf_token %}
-            <div class="mb-3">
-                <label for="topicInput" class="form-label visually-hidden">Quiz Topic</label>
-                <input type="text" class="form-control form-control-lg" id="topicInput" name="topic" placeholder="e.g., World History, Python Programming, Space Exploration" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg">Generate Quiz</button>
+            <input type="text" class="custom-input" id="topicInput" name="topic" placeholder="어떤 주제로 퀴즈를 만들까요?" required autocomplete="off">
+            <button type="submit" class="send-btn">
+                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
         </form>
+
+        <div class="suggestions">
+            <div class="chip" onclick="setInput('한국의 역사')">한국의 역사</div>
+            <div class="chip" onclick="setInput('기초 파이썬 문법')">기초 파이썬 문법</div>
+            <div class="chip" onclick="setInput('우주와 블랙홀')">우주와 블랙홀</div>
+            <div class="chip" onclick="setInput('영화 기생충')">영화 기생충</div>
+        </div>
     </div>
 
-    <!-- Bootstrap JS CDN (optional, but good for some components) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        function setInput(text) {
+            document.getElementById('topicInput').value = text;
+        }
+    </script>
 </body>
 </html>

@@ -29,7 +29,7 @@ def home(request):
             current_count = cache.get(cache_key, 0)
             
             if current_count >= MAX_QUIZZES_PER_DAY:
-                error_message = f"You have reached the daily limit of {MAX_QUIZZES_PER_DAY} quiz generations. Please try again tomorrow."
+                error_message = f"일일 퀴즈 생성 한도({MAX_QUIZZES_PER_DAY}회)를 초과했습니다. 내일 다시 시도해주세요."
                 return render(request, 'home.html', {'error_message': error_message})
             
             cache.set(cache_key, current_count + 1, timeout=seconds_until_midnight)
@@ -44,10 +44,10 @@ def home(request):
                 return redirect('quiz_app:quiz')
             else:
                 # Handle case where no questions were generated
-                error_message = "Failed to generate quiz questions. Please try a different topic."
+                error_message = "퀴즈 생성에 실패했습니다. 다른 주제로 시도해주세요."
                 return render(request, 'home.html', {'error_message': error_message})
         else:
-            error_message = "Please enter a quiz topic."
+            error_message = "퀴즈 주제를 입력해주세요."
             return render(request, 'home.html', {'error_message': error_message})
     return render(request, 'home.html')
 
@@ -78,7 +78,7 @@ def quiz(request):
                 'question_number': current_question_index + 1,
                 'question': question['question'],
                 'options': question['options'],
-                'error_message': "Please select an answer."
+                'error_message': "답을 선택해주세요."
             }
             return render(request, 'quiz.html', context)
 
@@ -104,27 +104,35 @@ def result(request):
     score = 0
     correct_answers_count = 0
     total_questions = len(quiz_questions)
+    review_data = []
 
     for i, question in enumerate(quiz_questions):
         if i < len(user_answers):
-            if user_answers[i] == question['answer']:
-                score += 100 / total_questions # Assuming equal weight for each question
+            user_answer = user_answers[i]
+            correct_answer = question['answer']
+            is_correct = (user_answer == correct_answer)
+            
+            if is_correct:
+                score += 100 / total_questions
                 correct_answers_count += 1
+            
+            review_data.append({
+                'question': question['question'],
+                'user_answer': user_answer,
+                'correct_answer': correct_answer,
+                'explanation': question.get('explanation', '해설이 없습니다.'),
+                'is_correct': is_correct,
+                'options': question['options']
+            })
     
-    score = round(score) # Round the score to a whole number
+    score = round(score)
 
     context = {
         'quiz_topic': quiz_topic,
         'score': score,
         'correct_answers_count': correct_answers_count,
-        'total_questions': total_questions
+        'total_questions': total_questions,
+        'review_data': review_data
     }
-
-    # Clear session data related to the quiz after results are displayed
-    # del request.session['quiz_questions']
-    # del request.session['quiz_topic']
-    # del request.session['current_question_index']
-    # del request.session['user_answers']
-    # Keeping session data for now so user can potentially review if needed or "play again"
 
     return render(request, 'result.html', context)
