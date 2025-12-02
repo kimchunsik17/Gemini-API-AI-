@@ -33,20 +33,20 @@ def generate_quiz_questions(topic: str) -> list:
 
     prompt = f"""
     You are a quiz generator. Generate 5 multiple-choice questions about "{topic}" in Korean.
-    Each question should have a 'question', 'options' (a list of 4 strings), 'answer' (the correct option string), and an 'explanation' (a brief explanation of the correct answer).
+    Each question should have a 'question', 'options' (a list of 4 strings), 'answer' (the 0-based index of the correct option), and an 'explanation' (a brief explanation of the correct answer).
     The response MUST be a pure JSON list format, without any Markdown backticks (```json).
     Example format:
     [
       {{
         "question": "대한민국의 수도는 어디입니까?",
         "options": ["부산", "서울", "인천", "대구"],
-        "answer": "서울",
+        "answer": 1,
         "explanation": "서울은 대한민국의 수도이자 최대 도시입니다."
       }},
       {{
         "question": "태양계에서 가장 큰 행성은 무엇입니까?",
         "options": ["지구", "화성", "목성", "금성"],
-        "answer": "목성",
+        "answer": 2,
         "explanation": "목성은 태양계에서 가장 큰 가스 행성입니다."
       }}
     ]

@@ -108,18 +108,27 @@ def result(request):
 
     for i, question in enumerate(quiz_questions):
         if i < len(user_answers):
-            user_answer = user_answers[i]
-            correct_answer = question['answer']
-            is_correct = (user_answer == correct_answer)
-            
+            try:
+                user_answer_index = int(user_answers[i])
+                correct_answer_index = int(question['answer'])
+                
+                user_answer_text = question['options'][user_answer_index]
+                correct_answer_text = question['options'][correct_answer_index]
+                
+                is_correct = (user_answer_index == correct_answer_index)
+            except (ValueError, IndexError, TypeError):
+                user_answer_text = "Invalid Answer"
+                correct_answer_text = "Unknown"
+                is_correct = False
+
             if is_correct:
                 score += 100 / total_questions
                 correct_answers_count += 1
             
             review_data.append({
                 'question': question['question'],
-                'user_answer': user_answer,
-                'correct_answer': correct_answer,
+                'user_answer': user_answer_text,
+                'correct_answer': correct_answer_text,
                 'explanation': question.get('explanation', '해설이 없습니다.'),
                 'is_correct': is_correct,
                 'options': question['options']

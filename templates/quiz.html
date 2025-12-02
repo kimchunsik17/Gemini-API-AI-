@@ -187,7 +187,7 @@
                     <div class="options-grid">
                         {% for option in options %}
                             <div class="option-card" onclick="document.getElementById('option{{ forloop.counter }}').checked = true;">
-                                <input class="option-input" type="radio" name="option" id="option{{ forloop.counter }}" value="{{ option }}" required>
+                                <input class="option-input" type="radio" name="option" id="option{{ forloop.counter }}" value="{{ forloop.counter0 }}" required>
                                 <label class="option-label" for="option{{ forloop.counter }}">
                                     {{ option }}
                                 </label>
