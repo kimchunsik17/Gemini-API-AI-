@@ -21,5 +21,6 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8080
 
-# Run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "genquiz_web.wsgi:application"]
+# Run migrations and then start the application using Gunicorn
+# Using shell form to allow chaining commands with &&
+CMD python manage.py migrate && gunicorn --bind 0.0.0.0:8080 genquiz_web.wsgi:application
