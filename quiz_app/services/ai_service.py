@@ -17,7 +17,7 @@ def configure_gemini():
     """Configures the Gemini API with the API key."""
     genai.configure(api_key=get_gemini_api_key())
 
-def generate_quiz_questions(topic: str) -> list:
+def generate_quiz_questions(topic: str) -> tuple[list, str | None]:
     """
     Generates quiz questions on a given topic using the Gemini API.
 
@@ -25,17 +25,24 @@ def generate_quiz_questions(topic: str) -> list:
         topic (str): The topic for which to generate quiz questions.
 
     Returns:
-        list: A list of dictionaries, where each dictionary represents a quiz question.
-              Returns an empty list if an error occurs or no valid JSON is found.
+        tuple: A tuple containing:
+            - list: A list of dictionaries, where each dictionary represents a quiz question. Empty if error.
+            - str: An error message if an error occurred or the topic was inappropriate, otherwise None.
     """
     configure_gemini()
     model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = f"""
-    You are a quiz generator. Generate 5 multiple-choice questions about "{topic}" in Korean.
+    You are a quiz generator. First, evaluate if the topic "{topic}" is inappropriate, offensive, sexually explicit, hate speech, or clearly not suitable for a general knowledge quiz.
+    
+    If the topic is inappropriate, return ONLY the following JSON object:
+    {{"error": "inappropriate_topic"}}
+
+    If the topic is valid, generate 5 multiple-choice questions about "{topic}" in Korean.
     Each question should have a 'question', 'options' (a list of 4 strings), 'answer' (the 0-based index of the correct option), and an 'explanation' (a brief explanation of the correct answer).
     The response MUST be a pure JSON list format, without any Markdown backticks (```json).
-    Example format:
+    
+    Example format for valid topic:
     [
       {{
         "question": "대한민국의 수도는 어디입니까?",
@@ -63,25 +70,40 @@ def generate_quiz_questions(topic: str) -> list:
             }
         )
         
-        # Extract JSON from the response text
-        # The prompt explicitly asks for pure JSON, so we expect it directly.
-        # However, it's good practice to handle potential malformed responses.
         quiz_json_str = response.text.strip()
         
+        # Remove markdown backticks if present
+        if quiz_json_str.startswith("```json"):
+            quiz_json_str = quiz_json_str[7:]
+        if quiz_json_str.startswith("```"):
+            quiz_json_str = quiz_json_str[3:]
+        if quiz_json_str.endswith("```"):
+            quiz_json_str = quiz_json_str[:-3]
+            
+        quiz_json_str = quiz_json_str.strip()
+
         # Attempt to parse as JSON
-        quiz_data = json.loads(quiz_json_str)
+        data = json.loads(quiz_json_str)
         
-        return quiz_data
+        # Check for specific error object
+        if isinstance(data, dict) and data.get("error") == "inappropriate_topic":
+            return [], "부적절한 주제입니다. 다른 주제로 시도해주세요."
+        
+        if isinstance(data, list):
+            return data, None
+            
+        return [], "AI가 응답을 올바르게 생성하지 못했습니다. 다시 시도해주세요."
+
     except ValueError as e:
         print(f"API Key Error: {e}")
-        return []
+        return [], "API 키 설정 오류가 발생했습니다."
     except json.JSONDecodeError as e:
         print(f"JSON decoding error: {e}")
         print(f"Received text: {quiz_json_str}")
-        return []
+        return [], "AI 응답을 처리하는 중 오류가 발생했습니다."
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        return []
+        return [], "알 수 없는 오류가 발생했습니다."
 
 if __name__ == '__main__':
     # Example usage (for testing purposes)

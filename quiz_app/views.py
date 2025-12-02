@@ -35,7 +35,8 @@ def home(request):
             cache.set(cache_key, current_count + 1, timeout=seconds_until_midnight)
 
             # Generate quiz questions using AI service
-            quiz_questions = generate_quiz_questions(topic)
+            quiz_questions, error_message = generate_quiz_questions(topic)
+            
             if quiz_questions:
                 request.session['quiz_questions'] = quiz_questions
                 request.session['quiz_topic'] = topic
@@ -43,8 +44,9 @@ def home(request):
                 request.session['user_answers'] = []
                 return redirect('quiz_app:quiz')
             else:
-                # Handle case where no questions were generated
-                error_message = "퀴즈 생성에 실패했습니다. 다른 주제로 시도해주세요."
+                # Handle case where no questions were generated or error occurred
+                if not error_message:
+                    error_message = "퀴즈 생성에 실패했습니다. 다른 주제로 시도해주세요."
                 return render(request, 'home.html', {'error_message': error_message})
         else:
             error_message = "퀴즈 주제를 입력해주세요."
